@@ -8,17 +8,19 @@ from .backends.http_backend import scrape_url as http_scrape
 from .backends.browser_backend import (
     browser_navigate,
     browser_click,
+    browser_interact_type,
     browser_extract,
     browser_screenshot,
     browser_scroll,
     browser_close,
 )
-from .backends.reddit_backend import scrape_reddit
+from .backends.reddit_backend import scrape_reddit as _scrape_reddit_backend
 from .security import RateLimiter, ScopeValidator
 from .stealth import StealthConfig
 from .captcha_handler import CaptchaHandler
+from . import __version__, __description__
 
-mcp = FastMCP("wafle-scraper", description=__import__("__init__", fromlist=["__description__"]).__description__)
+mcp = FastMCP("wafle-scraper")
 
 _limiter = RateLimiter()
 _validator = ScopeValidator()
@@ -76,7 +78,7 @@ def scrape_reddit(subreddit: str, sort: str = "hot", limit: int = 10) -> str:
         Markdown-formatted list of posts with title, author, score, and URL.
     """
     _limiter.check()
-    return scrape_reddit(subreddit, sort, limit)
+    return _scrape_reddit_backend(subreddit, sort, limit)
 
 
 @mcp.tool()
@@ -128,7 +130,7 @@ def main():
     parser = argparse.ArgumentParser(description="wafle-scraper MCP server")
     parser.add_argument("--http", action="store_true", help="Run in HTTP SSE mode")
     parser.add_argument("--port", type=int, default=8000, help="Port for HTTP mode")
-    parser.add_argument("--version", action="version", version=f"wafle-scraper {__import__('__init__', fromlist=['__version__']).__version__}")
+    parser.add_argument("--version", action="version", version=f"wafle-scraper {__version__}")
     args = parser.parse_args()
 
     if args.http:

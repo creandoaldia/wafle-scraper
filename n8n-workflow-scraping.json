@@ -1,0 +1,175 @@
+{
+  "name": "WAFLE - Scraping semanal de competidores",
+  "nodes": [
+    {
+      "parameters": {
+        "triggerTimes": {
+          "item": [
+            {
+              "mode": "everyWeek",
+              "hour": 8,
+              "minute": 0,
+              "weekday": 1
+            }
+          ]
+        }
+      },
+      "id": "schedule-trigger",
+      "name": "Schedule (Lunes 8AM)",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "url": "https://ejemplo-competidor.com",
+        "options": {
+          "timeout": 30000,
+          "response": {
+            "response": {
+              "fullResponse": true
+            }
+          }
+        }
+      },
+      "id": "http-request-1",
+      "name": "HTTP Request - Competidor 1",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [450, 200]
+    },
+    {
+      "parameters": {
+        "url": "https://ejemplo-competidor2.com",
+        "options": {
+          "timeout": 30000,
+          "response": {
+            "response": {
+              "fullResponse": true
+            }
+          }
+        }
+      },
+      "id": "http-request-2",
+      "name": "HTTP Request - Competidor 2",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [450, 400]
+    },
+    {
+      "parameters": {
+        "jsCode": "const $ = require('cheerio').load($input.first().json.body);\nconst data = {\n  title: $('title').text().trim(),\n  description: $('meta[name=\"description\"]').attr('content') || '',\n  h1: $('h1').first().text().trim(),\n  links: $('a[href]').map((i, el) => $(el).attr('href')).get().filter(h => h.startsWith('http')).slice(0, 20),\n  images: $('img[src]').map((i, el) => $(el).attr('src')).get().filter(s => s.startsWith('http')).slice(0, 10),\n  text_length: $('body').text().length\n};\nreturn { json: data };"
+      },
+      "id": "code-parse-1",
+      "name": "Parse HTML - Competidor 1",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [650, 200]
+    },
+    {
+      "parameters": {
+        "jsCode": "const $ = require('cheerio').load($input.first().json.body);\nconst data = {\n  title: $('title').text().trim(),\n  description: $('meta[name=\"description\"]').attr('content') || '',\n  h1: $('h1').first().text().trim(),\n  links: $('a[href]').map((i, el) => $(el).attr('href')).get().filter(h => h.startsWith('http')).slice(0, 20),\n  images: $('img[src]').map((i, el) => $(el).attr('src')).get().filter(s => s.startsWith('http')).slice(0, 10),\n  text_length: $('body').text().length\n};\nreturn { json: data };"
+      },
+      "id": "code-parse-2",
+      "name": "Parse HTML - Competidor 2",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [650, 400]
+    },
+    {
+      "parameters": {
+        "jsCode": "const { GoogleGenerativeAI } = require('@google/generative-ai');\nconst genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);\nconst model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });\n\nconst data1 = $('Parse HTML - Competidor 1').item;\nconst data2 = $('Parse HTML - Competidor 2').item;\n\nconst prompt = `Analiza estos 2 competidores:\n\nCompetidor 1:\nTitle: ${data1.json.title}\nDesc: ${data1.json.description}\nH1: ${data1.json.h1}\n\nCompetidor 2:\nTitle: ${data2.json.title}\nDesc: ${data2.json.description}\nH1: ${data2.json.h1}\n\nGenera:\n1. Comparativa de value props\n2. Diferencias clave\n3. Oportunidades de posicionamiento`;\n\nconst result = await model.generateContent(prompt);\nreturn { json: { analysis: result.response.text() } };"
+      },
+      "id": "ai-analysis",
+      "name": "AI Analysis",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [850, 300]
+    },
+    {
+      "parameters": {
+        "content": "={{ $json.analysis }}",
+        "subject": "Scraping semanal de competidores - {{ new Date().toLocaleDateString() }}",
+        "toName": "WAFLE"
+      },
+      "id": "email-output",
+      "name": "Email Report",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 1,
+      "position": [1050, 300]
+    }
+  ],
+  "connections": {
+    "Schedule (Lunes 8AM)": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request - Competidor 1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "HTTP Request - Competidor 2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request - Competidor 1": {
+      "main": [
+        [
+          {
+            "node": "Parse HTML - Competidor 1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request - Competidor 2": {
+      "main": [
+        [
+          {
+            "node": "Parse HTML - Competidor 2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse HTML - Competidor 1": {
+      "main": [
+        [
+          {
+            "node": "AI Analysis",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse HTML - Competidor 2": {
+      "main": [
+        [
+          {
+            "node": "AI Analysis",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Analysis": {
+      "main": [
+        [
+          {
+            "node": "Email Report",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}
