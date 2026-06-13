@@ -1,0 +1,44 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "wafle-scraper"
+version = "0.1.0"
+description = "Wafle-Scraper — universal MCP server for safe web scraping with browser automation. Incognito, isolated, audited."
+readme = "README.md"
+license = "MIT"
+authors = [{name = "WAFLE"}]
+requires-python = ">=3.10"
+keywords = ["mcp", "web-scraping", "browser-automation", "wafle", "playwright", "beautifulsoup"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Internet :: WWW/HTTP",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    "mcp>=1.0.0",
+    "playwright>=1.60.0",
+    "requests>=2.31.0",
+    "beautifulsoup4>=4.12.0",
+    "lxml>=5.0.0",
+    "httpx>=0.28.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/creandoaldia/wafle-scraper"
+Repository = "https://github.com/creandoaldia/wafle-scraper"
+Documentation = "https://github.com/creandoaldia/wafle-scraper#readme"
+
+[project.scripts]
+wafle-scraper = "waflescraper.__main__:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["waflescraper*"]
