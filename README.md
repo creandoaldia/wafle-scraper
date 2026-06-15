@@ -96,6 +96,21 @@ This is the only ethical and reliable approach without paid services.
 - Playwright with Chromium installed (`playwright install chromium`)
 - Windows, macOS, Linux
 
+## Dependencies
+
+Standalone — no other MCP servers required.
+
+## Known Issues
+
+| Issue | Detail | Status |
+|-------|--------|--------|
+| **CDP health check unstable** | `_cdp_health_check()` creates a throwaway context just to eval `1+1`. Masks real CDP issues instead of diagnosing them. | 🟡 Medium |
+| **CAPTCHA handler is interactive only** | CAPTCHA solver relies on stdin — doesn't work in MCP server mode (no stdin available in stdio transport). | 🔴 High |
+| **`_safe_goto` only 2 retries** | No exponential backoff, no proxy fallback. If 2 attempts fail, the whole scrape fails. | 🟡 Medium |
+| **Error strings instead of exceptions** | `browser_navigate`, `browser_click`, etc. return `"Error: ..."` strings instead of raising. Consumers must parse strings. | 🟡 Medium |
+| **Single browser context** | Only 1 context at a time. Concurrent `scrape_browser` calls cause race conditions. | 🔴 High |
+| **Reddit HTML fallback is silent** | If JSON API fails, falls back to `old.reddit.com` without logging the fallback path. | 🟢 Low |
+
 ## Installation from Source
 
 ```bash

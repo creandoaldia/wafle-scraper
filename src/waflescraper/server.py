@@ -1,18 +1,12 @@
 """wafle-scraper MCP server — safe, audited web scraping + browser automation."""
-
 import sys
 import argparse
 from mcp.server.fastmcp import FastMCP
 
 from .backends.http_backend import scrape_url as http_scrape
 from .backends.browser_backend import (
-    browser_navigate,
-    browser_click,
-    browser_interact_type,
-    browser_extract,
-    browser_screenshot,
-    browser_scroll,
-    browser_close,
+    browser_navigate, browser_click, browser_interact_type,
+    browser_extract, browser_screenshot, browser_scroll, browser_close,
 )
 from .backends.reddit_backend import scrape_reddit as _scrape_reddit_backend
 from .security import RateLimiter, ScopeValidator
@@ -21,7 +15,6 @@ from .captcha_handler import CaptchaHandler
 from . import __version__, __description__
 
 mcp = FastMCP("wafle-scraper")
-
 _limiter = RateLimiter()
 _validator = ScopeValidator()
 _stealth = StealthConfig()
@@ -30,100 +23,51 @@ _captcha = CaptchaHandler()
 
 @mcp.tool()
 def scrape_url(url: str, extract_links: bool = False, extract_images: bool = False) -> str:
-    """Extract readable text content from a static URL.
-
-    Args:
-        url: Full URL to scrape (http/https).
-        extract_links: If True, include hyperlinks in output.
-        extract_images: If True, include image URLs in output.
-
-    Returns:
-        Markdown-formatted content extracted from the page.
-    """
+    """Extract readable text content from a static URL."""
     _limiter.check()
     _validator.assert_allowed(url)
-    result = http_scrape(url, extract_links, extract_images)
-    return result
+    return http_scrape(url, extract_links, extract_images)
 
 
 @mcp.tool()
 def scrape_browser(url: str, wait_selector: str = "", scroll: bool = False) -> str:
-    """Navigate a page in an isolated incognito browser and extract text.
-
-    Args:
-        url: Full URL to navigate to.
-        wait_selector: Optional CSS selector to wait for (dynamic content).
-        scroll: If True, gradually scroll to load lazy content.
-
-    Returns:
-        Markdown-formatted text content from the rendered page.
-    """
+    """Navigate a page in an isolated incognito browser and extract text."""
     _limiter.check()
     _validator.assert_allowed(url)
     _captcha.check_interactive()
-    result = browser_navigate(url, wait_selector, scroll)
-    return result
+    return browser_navigate(url, wait_selector, scroll)
 
 
 @mcp.tool()
 def scrape_reddit(subreddit: str, sort: str = "hot", limit: int = 10) -> str:
-    """Fetch public posts from a subreddit via the official Reddit API.
-
-    Args:
-        subreddit: Name of the subreddit (without r/).
-        sort: One of 'hot', 'new', 'top', 'rising'.
-        limit: Number of posts to fetch (1-100).
-
-    Returns:
-        Markdown-formatted list of posts with title, author, score, and URL.
-    """
+    """Fetch public posts from a subreddit via the official Reddit API."""
     _limiter.check()
     return _scrape_reddit_backend(subreddit, sort, limit)
 
 
 @mcp.tool()
 def extract_emails(url: str) -> str:
-    """Find email addresses on a public page.
-
-    Args:
-        url: Full URL to scan.
-
-    Returns:
-        JSON list of found email addresses.
-    """
+    """Find email addresses on a public page."""
     _limiter.check()
     _validator.assert_allowed(url)
     from .backends.http_backend import extract_emails_from_url
-    result = extract_emails_from_url(url)
-    return result
+    return extract_emails_from_url(url)
 
 
 @mcp.tool()
 def browser_interact(action: str, selector: str = "", value: str = "") -> str:
-    """Interact with the active browser page (click, type, extract).
-
-    Args:
-        action: One of 'click', 'type', 'extract', 'scroll', 'screenshot'.
-        selector: CSS selector for the target element.
-        value: Text value for 'type' action.
-
-    Returns:
-        Result of the interaction.
-    """
+    """Interact with the active browser page (click, type, extract)."""
     _captcha.check_interactive()
-    if action == "click":
-        return browser_click(selector)
-    elif action == "type":
-        return browser_interact_type(selector, value)
-    elif action == "extract":
-        return browser_extract(selector)
-    elif action == "screenshot":
-        return browser_screenshot()
-    elif action == "scroll":
-        return browser_scroll()
-    elif action == "close":
-        return browser_close()
-    return f"Unknown action: {action}"
+    actions = {
+        "click": lambda: browser_click(selector),
+        "type": lambda: browser_interact_type(selector, value),
+        "extract": lambda: browser_extract(selector),
+        "screenshot": lambda: browser_screenshot(),
+        "scroll": lambda: browser_scroll(),
+        "close": lambda: browser_close(),
+    }
+    fn = actions.get(action)
+    return fn() if fn else f"Unknown action: {action}"
 
 
 def main():
@@ -132,7 +76,6 @@ def main():
     parser.add_argument("--port", type=int, default=8000, help="Port for HTTP mode")
     parser.add_argument("--version", action="version", version=f"wafle-scraper {__version__}")
     args = parser.parse_args()
-
     if args.http:
         mcp.run(transport="sse", host="0.0.0.0", port=args.port)
     else:
