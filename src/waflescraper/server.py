@@ -2,6 +2,7 @@
 import sys
 import argparse
 from mcp.server.fastmcp import FastMCP
+import anyio
 
 from .backends.http_backend import scrape_url as http_scrape
 from .backends.browser_backend import (
@@ -30,12 +31,14 @@ def scrape_url(url: str, extract_links: bool = False, extract_images: bool = Fal
 
 
 @mcp.tool()
-def scrape_browser(url: str, wait_selector: str = "", scroll: bool = False) -> str:
+async def scrape_browser(url: str, wait_selector: str = "", scroll: bool = False) -> str:
     """Navigate a page in an isolated incognito browser and extract text."""
     _limiter.check()
     _validator.assert_allowed(url)
     _captcha.check_interactive()
-    return browser_navigate(url, wait_selector, scroll)
+    def _run():
+        return browser_navigate(url, wait_selector, scroll)
+    return await anyio.to_thread.run_sync(_run)
 
 
 @mcp.tool()
@@ -55,19 +58,21 @@ def extract_emails(url: str) -> str:
 
 
 @mcp.tool()
-def browser_interact(action: str, selector: str = "", value: str = "") -> str:
+async def browser_interact(action: str, selector: str = "", value: str = "") -> str:
     """Interact with the active browser page (click, type, extract)."""
     _captcha.check_interactive()
-    actions = {
-        "click": lambda: browser_click(selector),
-        "type": lambda: browser_interact_type(selector, value),
-        "extract": lambda: browser_extract(selector),
-        "screenshot": lambda: browser_screenshot(),
-        "scroll": lambda: browser_scroll(),
-        "close": lambda: browser_close(),
-    }
-    fn = actions.get(action)
-    return fn() if fn else f"Unknown action: {action}"
+    def _run():
+        actions = {
+            "click": lambda: browser_click(selector),
+            "type": lambda: browser_interact_type(selector, value),
+            "extract": lambda: browser_extract(selector),
+            "screenshot": lambda: browser_screenshot(),
+            "scroll": lambda: browser_scroll(),
+            "close": lambda: browser_close(),
+        }
+        fn = actions.get(action)
+        return fn() if fn else f"Unknown action: {action}"
+    return await anyio.to_thread.run_sync(_run)
 
 
 def main():
