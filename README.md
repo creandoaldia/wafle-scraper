@@ -1,3 +1,12 @@
+```
+██╗    ██╗  █████╗  ███████╗██╗     ███████╗
+██║    ██║ ██╔══██╗ ██╔════╝██║     ██╔════╝
+██║ █╗ ██║ ███████║ █████╗  ██║     █████╗
+██║███╗██║ ██╔══██║ ██╔══╝  ██║     ██╔══╝
+╚███╔███╔╝ ██║  ██║ ██║     ███████╗███████║
+ ╚══╝╚══╝  ╚═╝  ╚═╝ ╚═╝     ╚══════╝╚══════╝
+```
+
 # Wafle-Scraper — Universal MCP Server for Safe Web Scraping
 
 **Wafle-Scraper** is an MCP server that lets AI agents (OpenCode, Claude, Cursor) extract data from the web safely and responsibly.
