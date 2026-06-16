@@ -74,23 +74,28 @@ class StealthConfig:
     def page_load_delay() -> float:
         return random.uniform(1.0, 3.0)
 
-    def browser_launch_args(self) -> dict:
-        """Extra args for undetected browser launch."""
-        return {
-            "args": [
-                "--incognito",
-                "--no-sandbox",
-                "--disable-blink-features=AutomationControlled",
-                "--disable-features=IsolateOrigins,site-per-process",
-                "--disable-site-isolation-trials",
-                "--disable-web-security",
-                "--disable-features=ChromeWhatsNewUI",
-                "--no-first-run",
-                "--no-default-browser-check",
-                "--disable-search-engine-choice-screen",
-                "--mute-audio",
-            ]
-        }
+    def browser_launch_args(self, safe: bool = True) -> dict:
+        """Extra args for undetected browser launch.
+
+        Args:
+            safe: If True (default), returns hardened args without CORS bypass.
+                  Set to False ONLY for trusted internal testing environments.
+        """
+        args = [
+            "--incognito",
+            "--no-sandbox",
+            "--disable-blink-features=AutomationControlled",
+            "--disable-features=IsolateOrigins,site-per-process",
+            "--disable-site-isolation-trials",
+            "--disable-features=ChromeWhatsNewUI",
+            "--no-first-run",
+            "--no-default-browser-check",
+            "--disable-search-engine-choice-screen",
+            "--mute-audio",
+        ]
+        if not safe:
+            args.append("--disable-web-security")
+        return {"args": args}
 
     def context_params(self) -> dict:
         return {

@@ -33,7 +33,7 @@ def scrape_url(url: str, extract_links: bool = False, extract_images: bool = Fal
 @mcp.tool()
 async def scrape_browser(url: str, wait_selector: str = "", scroll: bool = False) -> str:
     """Navigate a page in an isolated incognito browser and extract text."""
-    _limiter.check()
+    await _limiter.async_check()
     _validator.assert_allowed(url)
     _captcha.check_interactive()
     def _run():
@@ -82,7 +82,9 @@ def main():
     parser.add_argument("--version", action="version", version=f"wafle-scraper {__version__}")
     args = parser.parse_args()
     if args.http:
-        mcp.run(transport="sse", host="0.0.0.0", port=args.port)
+        mcp.settings.port = args.port
+        mcp.settings.host = "0.0.0.0"
+        mcp.run(transport="sse")
     else:
         mcp.run(transport="stdio")
 

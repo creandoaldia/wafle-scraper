@@ -4,6 +4,7 @@ Built-in guards that prevent abuse, data leakage, and unauthorized access.
 """
 
 import time
+import asyncio
 import re
 from dataclasses import dataclass, field
 
@@ -13,10 +14,20 @@ class RateLimiter:
     min_interval: float = 2.0
     _last_call: float = 0.0
 
-    def check(self):
+    def _wait_time(self) -> float:
         elapsed = time.time() - self._last_call
-        if elapsed < self.min_interval:
-            time.sleep(self.min_interval - elapsed)
+        return max(0.0, self.min_interval - elapsed)
+
+    def check(self):
+        wait = self._wait_time()
+        if wait > 0:
+            time.sleep(wait)
+        self._last_call = time.time()
+
+    async def async_check(self):
+        wait = self._wait_time()
+        if wait > 0:
+            await asyncio.sleep(wait)
         self._last_call = time.time()
 
 

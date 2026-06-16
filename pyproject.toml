@@ -35,6 +35,12 @@ Homepage = "https://github.com/creandoaldia/wafle-scraper"
 Repository = "https://github.com/creandoaldia/wafle-scraper"
 Documentation = "https://github.com/creandoaldia/wafle-scraper#readme"
 
+[project.optional-dependencies]
+test = [
+    "pytest>=8.0.0",
+    "pytest-asyncio>=0.24.0",
+]
+
 [project.scripts]
 wafle-scraper = "waflescraper.__main__:main"
 
